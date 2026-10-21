@@ -1,0 +1,1735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TuneWave Music Player</title>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap');
+
+:root {
+    --bg: #10111b;
+    --panel: #191b29;
+    --panel2: #222437;
+    --pink: #ff6b9d;
+    --purple: #a78bfa;
+    --text: #f8f7ff;
+    --muted: #a4a6bb;
+    --border: #34364c;
+    --green: #7ee2b8;
+    --red: #ff8585;
+}
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "DM Sans", sans-serif;
+}
+
+header {
+    padding: 24px 6%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+}
+
+.logo {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--pink);
+}
+
+.logo span { color: white; }
+
+header p {
+    color: var(--muted);
+    margin: 5px 0 0;
+    font-size: 13px;
+}
+
+main {
+    width: min(1200px, 92%);
+    margin: 30px auto;
+}
+
+h1, h2, h3 {
+    font-family: "Playfair Display", serif;
+}
+
+h1 {
+    font-size: clamp(28px, 4vw, 42px);
+    margin-bottom: 8px;
+}
+
+h2 { margin-top: 0; }
+
+.subtitle {
+    color: var(--muted);
+    margin-top: 0;
+    margin-bottom: 28px;
+}
+
+.layout {
+    display: grid;
+    grid-template-columns: 1.2fr 0.8fr;
+    gap: 20px;
+}
+
+.panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 22px;
+    min-width: 0;
+}
+
+.now-playing {
+    background: linear-gradient(135deg, #28203c, #1b1c2b);
+    text-align: center;
+}
+
+.album {
+    width: 145px;
+    height: 145px;
+    border-radius: 24px;
+    background: linear-gradient(135deg, var(--pink), var(--purple));
+    margin: 5px auto 20px;
+    display: grid;
+    place-items: center;
+    font-size: 58px;
+    box-shadow: 0 12px 35px #0005;
+}
+
+.song-title {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 5px;
+    overflow-wrap: anywhere;
+}
+
+.artist-name { color: var(--muted); }
+
+.controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin: 22px 0 12px;
+}
+
+button {
+    background: var(--pink);
+    color: #19111b;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 10px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+button:hover {
+    filter: brightness(1.1);
+    transform: translateY(-1px);
+}
+
+button.secondary {
+    background: var(--panel2);
+    color: var(--text);
+    border: 1px solid var(--border);
+}
+
+button.active {
+    background: var(--green);
+    color: #10111b;
+}
+
+button.danger {
+    background: #48242d;
+    color: #ffb4bd;
+}
+
+button:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.status {
+    color: var(--muted);
+    font-size: 13px;
+    min-height: 20px;
+    overflow-wrap: anywhere;
+}
+
+.progress {
+    width: 100%;
+    height: 5px;
+    background: var(--border);
+    border-radius: 20px;
+    margin-top: 20px;
+}
+
+.progress div {
+    width: 0%;
+    height: 100%;
+    background: var(--pink);
+    border-radius: 20px;
+}
+
+.section { margin-top: 20px; }
+
+input, select {
+    width: 100%;
+    background: #10111b;
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 11px 12px;
+    border-radius: 9px;
+    outline: none;
+    font-family: inherit;
+    min-width: 0;
+}
+
+input:focus, select:focus {
+    border-color: var(--pink);
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.full { grid-column: 1 / -1; }
+
+label {
+    display: block;
+    color: var(--muted);
+    font-size: 12px;
+    margin-bottom: 6px;
+}
+
+.field { min-width: 0; }
+
+.field button { margin-top: 9px; }
+
+.song-list, .simple-list {
+    list-style: none;
+    padding: 0;
+    margin: 12px 0 0;
+}
+
+.song-item, .simple-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px;
+    border: 1px solid var(--border);
+    background: #141521;
+    border-radius: 12px;
+    margin-bottom: 9px;
+    min-width: 0;
+}
+
+.song-item.current {
+    border-color: var(--pink);
+    background: #302033;
+}
+
+.song-info {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.song-info strong {
+    display: block;
+    font-size: 14px;
+}
+
+.song-info small {
+    display: block;
+    color: var(--muted);
+    margin-top: 4px;
+}
+
+.song-actions {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    flex-shrink: 0;
+}
+
+.song-actions button {
+    padding: 7px 9px;
+    font-size: 12px;
+}
+
+.badge {
+    display: inline-block;
+    background: #34304d;
+    color: #d9caff;
+    border-radius: 20px;
+    padding: 4px 8px;
+    font-size: 11px;
+}
+
+.stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.stat {
+    background: var(--panel2);
+    padding: 14px;
+    border-radius: 12px;
+}
+
+.stat strong {
+    display: block;
+    color: var(--pink);
+    font-size: 23px;
+}
+
+.stat small { color: var(--muted); }
+
+.two-col {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+}
+
+.result-box {
+    background: #11121d;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px;
+    margin-top: 10px;
+    overflow-wrap: anywhere;
+}
+
+.empty {
+    color: var(--muted);
+    font-size: 13px;
+    padding: 10px 0;
+}
+
+.note {
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+footer {
+    color: var(--muted);
+    text-align: center;
+    padding: 28px 12px;
+    font-size: 12px;
+}
+
+@media (max-width: 800px) {
+    .layout, .two-col { grid-template-columns: 1fr; }
+    .form-grid { grid-template-columns: 1fr; }
+    .full { grid-column: auto; }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <div>
+        <div class="logo">♫ Tune<span>Wave</span></div>
+        <p>Music Player · Data Structures Project</p>
+    </div>
+    <span class="badge">DSA Implementation</span>
+</header>
+
+<main>
+    <h1>Your music, your vibe.</h1>
+    <p class="subtitle">
+        Explore songs, manage your playlist, build a queue, and discover artists.
+    </p>
+
+    <div class="stats">
+        <div class="stat">
+            <strong id="playlistCount">0</strong>
+            <small>Playlist Songs</small>
+        </div>
+        <div class="stat">
+            <strong id="queueCount">0</strong>
+            <small>Up Next Queue</small>
+        </div>
+        <div class="stat">
+            <strong id="historyCount">0</strong>
+            <small>History Songs</small>
+        </div>
+    </div>
+
+    <div class="layout">
+
+        <!-- LEFT: PLAYER AND PLAYLIST -->
+        <div>
+            <section class="panel now-playing">
+                <div class="album">♫</div>
+
+                <div class="badge" id="playSource">READY TO PLAY</div>
+                <h2 id="currentTitle" class="song-title">No song selected</h2>
+                <div id="currentArtist" class="artist-name">
+                    Choose a song from your playlist
+                </div>
+
+                <div class="progress"><div id="progressBar"></div></div>
+
+                <div class="controls">
+                    <button class="secondary" onclick="previousSong()">
+                        ⏮ Previous
+                    </button>
+                    <button onclick="togglePlayback()" id="playButton">
+                        ▶ Play
+                    </button>
+                    <button class="secondary" onclick="playNext()">
+                        Play Next ⏭
+                    </button>
+                </div>
+
+                <div class="controls">
+                    <button class="secondary" onclick="backSong()">
+                        ↶ Back
+                    </button>
+                    <button class="secondary" id="repeatButton"
+                            onclick="toggleRepeat()">
+                        Repeat: OFF
+                    </button>
+                </div>
+
+                <p class="status" id="playerStatus" aria-live="polite">
+                    Ready. Add a song or select one below.
+                </p>
+
+                <audio id="audioPlayer" preload="metadata"></audio>
+            </section>
+
+            <section class="panel section">
+                <h2>♫ Playlist</h2>
+                <p class="note">
+                    Doubly linked list + hash map. Each song has a unique ID.
+                </p>
+
+                <div class="form-grid">
+                    <div class="field">
+                        <label for="songId">Song ID</label>
+                        <input id="songId" placeholder="e.g. S7">
+                    </div>
+                    <div class="field">
+                        <label for="songTitle">Song Title</label>
+                        <input id="songTitle" placeholder="Song name">
+                    </div>
+                    <div class="field">
+                        <label for="songArtist">Artist</label>
+                        <input id="songArtist" placeholder="Artist name">
+                    </div>
+                    <div class="field">
+                        <label for="songUrl">Audio URL (optional)</label>
+                        <input id="songUrl" placeholder="https://.../song.mp3">
+                    </div>
+                    <div class="full">
+                        <button onclick="addSongFromForm()">+ Add Song</button>
+                    </div>
+                </div>
+
+                <ul id="playlistView" class="song-list"></ul>
+            </section>
+        </div>
+
+        <!-- RIGHT: QUEUE AND HISTORY -->
+        <div>
+            <section class="panel">
+                <h2>⏭ Up Next Queue</h2>
+                <p class="note">
+                    Queue songs play before the playlist continues.
+                    Playing a queued song does not change the playlist pointer.
+                </p>
+
+                <div class="field">
+                    <label for="queueSongId">Select song ID to queue</label>
+                    <select id="queueSongId"></select>
+                    <button onclick="addToQueue()">+ Add to Queue</button>
+                </div>
+
+                <ul id="queueView" class="simple-list"></ul>
+            </section>
+
+            <section class="panel section">
+                <h2>↶ History Stack</h2>
+                <p class="note">
+                    Last 10 previously played songs. Back replays and removes
+                    the most recent history entry.
+                </p>
+                <ul id="historyView" class="simple-list"></ul>
+            </section>
+        </div>
+    </div>
+
+    <!-- BST -->
+    <section class="panel section">
+        <h2>⌕ Song Search — Binary Search Tree</h2>
+        <p class="note">
+            Search by title prefix. Results are displayed in alphabetical order.
+        </p>
+
+        <div class="form-grid">
+            <div class="field">
+                <label for="prefixInput">Title Prefix</label>
+                <input id="prefixInput" placeholder="e.g. He">
+            </div>
+            <div class="field">
+                <label>&nbsp;</label>
+                <button onclick="searchPrefix()">Search Prefix</button>
+            </div>
+        </div>
+
+        <div id="bstResults" class="result-box">
+            Search for a title prefix to see matching songs.
+        </div>
+    </section>
+
+    <!-- ARTIST GRAPH -->
+    <section class="panel section">
+        <h2>◎ Artist Network — Undirected Graph</h2>
+        <p class="note">
+            Recommendations show artists exactly two links away, excluding
+            the selected artist and their direct neighbors.
+        </p>
+
+        <div class="two-col">
+            <div>
+                <h3>Connect Artists</h3>
+                <div class="field">
+                    <label for="artistOne">Artist 1</label>
+                    <input id="artistOne" placeholder="Artist name">
+                </div>
+                <div class="field" style="margin-top:10px">
+                    <label for="artistTwo">Artist 2</label>
+                    <input id="artistTwo" placeholder="Artist name">
+                </div>
+                <button style="margin-top:10px" onclick="connectArtists()">
+                    Connect Artists
+                </button>
+
+                <h3 style="margin-top:24px">Artist Connections</h3>
+                <div id="graphView" class="result-box"></div>
+            </div>
+
+            <div>
+                <h3>Find Recommendations</h3>
+                <div class="field">
+                    <label for="recommendArtist">Choose Artist</label>
+                    <select id="recommendArtist"></select>
+                </div>
+                <button style="margin-top:10px" onclick="showRecommendations()">
+                    Recommend Artists
+                </button>
+                <div id="recommendResults" class="result-box">
+                    Choose an artist to see recommendations.
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="panel section">
+        <h2>Data Structures Summary</h2>
+        <ul class="note">
+            <li><strong>Doubly Linked List:</strong> next and previous playlist navigation.</li>
+            <li><strong>Hash Map:</strong> fast lookup of songs by unique ID.</li>
+            <li><strong>Queue:</strong> first-in, first-out Up Next playback.</li>
+            <li><strong>Stack:</strong> last-in, first-out history with a limit of 10.</li>
+            <li><strong>Binary Search Tree:</strong> song titles and prefix search.</li>
+            <li><strong>Undirected Graph:</strong> artist connections and two-hop recommendations.</li>
+        </ul>
+        <button class="danger" onclick="resetDemo()">Reset Demo</button>
+    </section>
+</main>
+
+<footer>TuneWave Music Player · Data Structures & Algorithms</footer>
+
+<script>
+"use strict";
+
+/* =====================================================
+   SONG OBJECT
+===================================================== */
+
+class Song {
+    constructor(id, title, artist, audioUrl = "") {
+        this.id = id.trim();
+        this.title = title.trim();
+        this.artist = artist.trim();
+        this.audioUrl = audioUrl.trim();
+    }
+}
+
+/* =====================================================
+   1. DOUBLY LINKED LIST + HASH MAP PLAYLIST
+===================================================== */
+
+class PlaylistNode {
+    constructor(song) {
+        this.song = song;
+        this.prev = null;
+        this.next = null;
+    }
+}
+
+class Playlist {
+    constructor() {
+        this.head = null;
+        this.tail = null;
+        this.current = null;
+
+        // Hash map: song ID -> linked-list node
+        this.songMap = new Map();
+        this.size = 0;
+        this.repeat = false;
+    }
+
+    addSong(song) {
+        if (this.songMap.has(song.id)) {
+            return false;
+        }
+
+        const node = new PlaylistNode(song);
+
+        if (!this.head) {
+            this.head = node;
+            this.tail = node;
+            this.current = node;
+        } else {
+            node.prev = this.tail;
+            this.tail.next = node;
+            this.tail = node;
+        }
+
+        this.songMap.set(song.id, node);
+        this.size++;
+        return true;
+    }
+
+    removeSong(id) {
+        const node = this.songMap.get(id);
+        if (!node) return false;
+
+        const wasCurrent = this.current === node;
+
+        if (node.prev) node.prev.next = node.next;
+        else this.head = node.next;
+
+        if (node.next) node.next.prev = node.prev;
+        else this.tail = node.prev;
+
+        if (wasCurrent) {
+            this.current = node.next || node.prev || null;
+        }
+
+        this.songMap.delete(id);
+        this.size--;
+
+        if (this.size === 0) {
+            this.head = null;
+            this.tail = null;
+            this.current = null;
+        }
+
+        return true;
+    }
+
+    getSong(id) {
+        const node = this.songMap.get(id);
+        return node ? node.song : null;
+    }
+
+    getAllSongs() {
+        const songs = [];
+        let node = this.head;
+
+        while (node) {
+            songs.push(node.song);
+            node = node.next;
+        }
+
+        return songs;
+    }
+
+    setCurrent(id) {
+        const node = this.songMap.get(id);
+        if (!node) return false;
+
+        this.current = node;
+        return true;
+    }
+
+    next() {
+        if (!this.current) return "end";
+
+        if (this.current.next) {
+            this.current = this.current.next;
+            return this.current.song;
+        }
+
+        if (this.repeat && this.head) {
+            this.current = this.head;
+            return this.current.song;
+        }
+
+        return "end";
+    }
+
+    previous() {
+        if (!this.current) return "end";
+
+        if (this.current.prev) {
+            this.current = this.current.prev;
+            return this.current.song;
+        }
+
+        if (this.repeat && this.tail) {
+            this.current = this.tail;
+            return this.current.song;
+        }
+
+        return "start";
+    }
+
+    toggleRepeat() {
+        this.repeat = !this.repeat;
+        return this.repeat;
+    }
+}
+
+/* =====================================================
+   2. UP NEXT QUEUE
+===================================================== */
+
+class UpNextQueue {
+    constructor() {
+        this.items = [];
+    }
+
+    enqueue(song) {
+        this.items.push(song);
+    }
+
+    dequeue() {
+        if (this.isEmpty()) return null;
+        return this.items.shift();
+    }
+
+    isEmpty() {
+        return this.items.length === 0;
+    }
+
+    getAll() {
+        return [...this.items];
+    }
+
+    removeAt(index) {
+        if (index < 0 || index >= this.items.length) return null;
+        return this.items.splice(index, 1)[0];
+    }
+
+    clear() {
+        this.items = [];
+    }
+}
+
+/* =====================================================
+   3. HISTORY STACK — MAXIMUM 10 SONGS
+===================================================== */
+
+class HistoryStack {
+    constructor(limit = 10) {
+        this.items = [];
+        this.limit = limit;
+    }
+
+    push(song) {
+        if (!song) return;
+
+        this.items.push(song);
+
+        // Drop the oldest item if the limit is exceeded.
+        if (this.items.length > this.limit) {
+            this.items.shift();
+        }
+    }
+
+    pop() {
+        return this.items.pop() || null;
+    }
+
+    peek() {
+        return this.items.length
+            ? this.items[this.items.length - 1]
+            : null;
+    }
+
+    getAll() {
+        return [...this.items].reverse();
+    }
+
+    get size() {
+        return this.items.length;
+    }
+}
+
+/* =====================================================
+   4. BINARY SEARCH TREE — SONG TITLE SEARCH
+===================================================== */
+
+function normalizeTitle(title) {
+    return title.trim().toLocaleLowerCase();
+}
+
+function compareTitles(a, b) {
+    // Use the same comparison for insertion and searching.
+    if (a < b) return -1;
+    if (a > b) return 1;
+    return 0;
+}
+
+class BSTNode {
+    constructor(title, songId) {
+        this.title = title;
+        this.key = normalizeTitle(title);
+        this.songIds = [songId];
+        this.left = null;
+        this.right = null;
+    }
+}
+
+class SongBST {
+    constructor() {
+        this.root = null;
+    }
+
+    addSong(title, songId) {
+        const key = normalizeTitle(title);
+
+        if (!key) return;
+
+        const insert = (node) => {
+            if (!node) return new BSTNode(title, songId);
+
+            const comparison = compareTitles(key, node.key);
+
+            if (comparison === 0) {
+                if (!node.songIds.includes(songId)) {
+                    node.songIds.push(songId);
+                }
+            } else if (comparison < 0) {
+                node.left = insert(node.left);
+            } else {
+                node.right = insert(node.right);
+            }
+
+            return node;
+        };
+
+        this.root = insert(this.root);
+    }
+
+    removeSong(title, songId) {
+        const key = normalizeTitle(title);
+
+        const remove = (node) => {
+            if (!node) return null;
+
+            const comparison = compareTitles(key, node.key);
+
+            if (comparison < 0) {
+                node.left = remove(node.left);
+                return node;
+            }
+
+            if (comparison > 0) {
+                node.right = remove(node.right);
+                return node;
+            }
+
+            node.songIds = node.songIds.filter(id => id !== songId);
+
+            if (node.songIds.length > 0) return node;
+
+            if (!node.left) return node.right;
+            if (!node.right) return node.left;
+
+            let successor = node.right;
+
+            while (successor.left) {
+                successor = successor.left;
+            }
+
+            node.title = successor.title;
+            node.key = successor.key;
+            node.songIds = [...successor.songIds];
+
+            const removeSuccessor = (subtree) => {
+                if (!subtree.left) return subtree.right;
+                subtree.left = removeSuccessor(subtree.left);
+                return subtree;
+            };
+
+            node.right = removeSuccessor(node.right);
+            return node;
+        };
+
+        this.root = remove(this.root);
+    }
+
+    findSong(title) {
+        const key = normalizeTitle(title);
+        let node = this.root;
+
+        while (node) {
+            const comparison = compareTitles(key, node.key);
+
+            if (comparison === 0) {
+                return {
+                    title: node.title,
+                    songIds: [...node.songIds]
+                };
+            }
+
+            node = comparison < 0 ? node.left : node.right;
+        }
+
+        return null;
+    }
+
+    prefixSearch(prefix) {
+        const key = normalizeTitle(prefix);
+        const results = [];
+
+        if (!key) return results;
+
+        const visit = (node) => {
+            if (!node) return;
+
+            if (node.key.startsWith(key)) {
+                visit(node.left);
+
+                results.push({
+                    title: node.title,
+                    songIds: [...node.songIds]
+                });
+
+                visit(node.right);
+            } else if (node.key < key) {
+                // Smaller titles cannot match in the left subtree.
+                visit(node.right);
+            } else {
+                // Larger titles cannot match in the right subtree.
+                visit(node.left);
+            }
+        };
+
+        visit(this.root);
+
+        return results.sort((a, b) =>
+            compareTitles(normalizeTitle(a.title), normalizeTitle(b.title))
+        );
+    }
+}
+
+/* =====================================================
+   5. UNDIRECTED ARTIST GRAPH
+===================================================== */
+
+class ArtistGraph {
+    constructor() {
+        this.adjacency = new Map();
+    }
+
+    addArtist(artist) {
+        const name = artist.trim();
+        if (!name) return;
+
+        if (!this.adjacency.has(name)) {
+            this.adjacency.set(name, new Set());
+        }
+    }
+
+    addConnection(artistA, artistB) {
+        const a = artistA.trim();
+        const b = artistB.trim();
+
+        if (!a || !b || a.toLowerCase() === b.toLowerCase()) {
+            return false;
+        }
+
+        this.addArtist(a);
+        this.addArtist(b);
+
+        this.adjacency.get(a).add(b);
+        this.adjacency.get(b).add(a);
+
+        return true;
+    }
+
+    getDirectNeighbors(artist) {
+        return [...(this.adjacency.get(artist) || [])];
+    }
+
+    recommendArtists(artist) {
+        if (!this.adjacency.has(artist)) return [];
+
+        const direct = this.adjacency.get(artist);
+        const exactlyTwoAway = new Set();
+
+        for (const neighbor of direct) {
+            const neighborConnections = this.adjacency.get(neighbor);
+
+            if (!neighborConnections) continue;
+
+            for (const candidate of neighborConnections) {
+                if (candidate === artist) continue;
+                if (direct.has(candidate)) continue;
+
+                exactlyTwoAway.add(candidate);
+            }
+        }
+
+        return [...exactlyTwoAway].sort((a, b) =>
+            a.localeCompare(b, undefined, { sensitivity: "base" })
+        );
+    }
+
+    getAllConnections() {
+        return [...this.adjacency.entries()]
+            .sort((a, b) => a[0].localeCompare(b[0]))
+            .map(([artist, connections]) => ({
+                artist,
+                connections: [...connections].sort((a, b) =>
+                    a.localeCompare(b)
+                )
+            }));
+    }
+}
+
+/* =====================================================
+   CREATE DATA STRUCTURES
+===================================================== */
+
+const playlist = new Playlist();
+const upNext = new UpNextQueue();
+const history = new HistoryStack(10);
+const songBST = new SongBST();
+const artistGraph = new ArtistGraph();
+
+let currentSong = null;
+let currentSource = "playlist";
+let isPlaying = false;
+
+/* =====================================================
+   SONG MANAGEMENT
+===================================================== */
+
+function addSong(song) {
+    if (!(song instanceof Song)) {
+        song = new Song(
+            song.id,
+            song.title,
+            song.artist,
+            song.audioUrl || ""
+        );
+    }
+
+    if (!song.id || !song.title || !song.artist) {
+        showStatus("Song ID, title and artist are required.");
+        return false;
+    }
+
+    if (playlist.songMap.has(song.id)) {
+        showStatus("This song ID already exists. Use a unique ID.");
+        return false;
+    }
+
+    if (!playlist.addSong(song)) return false;
+
+    songBST.addSong(song.title, song.id);
+    artistGraph.addArtist(song.artist);
+
+    renderAll();
+    showStatus(song.title + " added to the playlist.");
+    return true;
+}
+
+function addSongFromForm() {
+    const id = document.getElementById("songId").value.trim();
+    const title = document.getElementById("songTitle").value.trim();
+    const artist = document.getElementById("songArtist").value.trim();
+    const audioUrl = document.getElementById("songUrl").value.trim();
+
+    const added = addSong(new Song(id, title, artist, audioUrl));
+
+    if (added) {
+        document.getElementById("songId").value = "";
+        document.getElementById("songTitle").value = "";
+        document.getElementById("songArtist").value = "";
+        document.getElementById("songUrl").value = "";
+    }
+}
+
+function removeSong(id) {
+    const song = playlist.getSong(id);
+    if (!song) return;
+
+    if (currentSong && currentSong.id === id) {
+        stopAudio();
+        currentSong = null;
+        isPlaying = false;
+        updatePlayerDisplay();
+    }
+
+    playlist.removeSong(id);
+
+    // Remove the song from the queue too.
+    upNext.items = upNext.items.filter(item => item.id !== id);
+
+    songBST.removeSong(song.title, id);
+
+    renderAll();
+    showStatus(song.title + " removed.");
+}
+
+/* =====================================================
+   PLAYBACK AND HISTORY
+===================================================== */
+
+function showStatus(message) {
+    document.getElementById("playerStatus").textContent = message;
+}
+
+function stopAudio() {
+    const audio = document.getElementById("audioPlayer");
+    audio.pause();
+    audio.removeAttribute("src");
+    audio.load();
+    document.getElementById("progressBar").style.width = "0%";
+}
+
+function recordCurrentSong() {
+    if (currentSong) {
+        history.push(currentSong);
+    }
+}
+
+function playSong(song, source = "playlist", options = {}) {
+    if (!song) {
+        showStatus("No song selected.");
+        return;
+    }
+
+    const { recordHistory = true } = options;
+
+    if (recordHistory && currentSong && currentSong.id !== song.id) {
+        history.push(currentSong);
+    }
+
+    const audio = document.getElementById("audioPlayer");
+
+    audio.pause();
+    audio.removeAttribute("src");
+    audio.load();
+
+    currentSong = song;
+    currentSource = source;
+    isPlaying = false;
+
+    // Queue playback does not modify playlist.current.
+    // A playlist song selected directly sets the playlist pointer.
+    if (source === "playlist") {
+        playlist.setCurrent(song.id);
+    }
+
+    updatePlayerDisplay();
+    renderAll();
+
+    if (song.audioUrl) {
+        audio.src = song.audioUrl;
+        audio.load();
+
+        audio.play()
+            .then(() => {
+                isPlaying = true;
+                updatePlayerDisplay();
+                showStatus("Now playing: " + song.title);
+            })
+            .catch(() => {
+                isPlaying = false;
+                updatePlayerDisplay();
+                showStatus(
+                    "Could not play this audio URL. Check the link or audio file."
+                );
+            });
+    } else {
+        showStatus(
+            "Selected: " + song.title +
+            ". Add a valid MP3/audio URL to hear the song."
+        );
+    }
+}
+
+function togglePlayback() {
+    if (!currentSong) {
+        const first = playlist.head;
+
+        if (!first) {
+            showStatus("Please add a song first.");
+            return;
+        }
+
+        playSong(first.song, "playlist");
+        return;
+    }
+
+    const audio = document.getElementById("audioPlayer");
+
+    if (!currentSong.audioUrl) {
+        showStatus("This demo song has no audio URL. Add an audio link first.");
+        return;
+    }
+
+    if (isPlaying) {
+        audio.pause();
+        isPlaying = false;
+        showStatus("Playback paused.");
+        updatePlayerDisplay();
+    } else {
+        audio.play()
+            .then(() => {
+                isPlaying = true;
+                showStatus("Now playing: " + currentSong.title);
+                updatePlayerDisplay();
+            })
+            .catch(() => {
+                showStatus("Playback failed. Check the audio URL.");
+            });
+    }
+}
+
+function playNext() {
+    // The queue has priority over playlist navigation.
+    if (!upNext.isEmpty()) {
+        const queuedSong = upNext.dequeue();
+
+        playSong(queuedSong, "queue");
+        renderAll();
+        return;
+    }
+
+    // If queue is empty, move to the next playlist song.
+    const result = playlist.next();
+
+    if (result === "end") {
+        showStatus("end");
+        return;
+    }
+
+    playSong(result, "playlist");
+}
+
+function previousSong() {
+    const result = playlist.previous();
+
+    if (result === "end" || result === "start") {
+        showStatus(result);
+        return;
+    }
+
+    playSong(result, "playlist");
+}
+
+function backSong() {
+    const previous = history.pop();
+
+    if (!previous) {
+        showStatus("History is empty.");
+        renderAll();
+        return;
+    }
+
+    // Do not push the currently playing song back into history.
+    // Replaying a history song does not change playlist.current.
+    playSong(previous, "history", { recordHistory: false });
+
+    renderAll();
+}
+
+function toggleRepeat() {
+    const enabled = playlist.toggleRepeat();
+
+    document.getElementById("repeatButton").textContent =
+        "Repeat: " + (enabled ? "ON" : "OFF");
+
+    document.getElementById("repeatButton").classList.toggle(
+        "active", enabled
+    );
+
+    showStatus("Repeat is " + (enabled ? "ON" : "OFF"));
+}
+
+/* =====================================================
+   QUEUE OPERATIONS
+===================================================== */
+
+function addToQueue() {
+    const id = document.getElementById("queueSongId").value;
+    const song = playlist.getSong(id);
+
+    if (!song) {
+        showStatus("Choose a valid song.");
+        return;
+    }
+
+    upNext.enqueue(song);
+    renderAll();
+    showStatus(song.title + " added to Up Next.");
+}
+
+function removeFromQueue(index) {
+    const song = upNext.removeAt(index);
+
+    if (song) {
+        renderAll();
+        showStatus(song.title + " removed from queue.");
+    }
+}
+
+/* =====================================================
+   BST PREFIX SEARCH
+===================================================== */
+
+function searchPrefix() {
+    const prefix = document.getElementById("prefixInput").value.trim();
+    const results = document.getElementById("bstResults");
+
+    if (!prefix) {
+        results.textContent = "Please enter a title prefix.";
+        return;
+    }
+
+    const matches = songBST.prefixSearch(prefix);
+
+    if (matches.length === 0) {
+        results.textContent = "No song titles match this prefix.";
+        return;
+    }
+
+    results.innerHTML = "";
+
+    const heading = document.createElement("p");
+    heading.textContent = "Matching titles (alphabetical order):";
+    results.appendChild(heading);
+
+    const list = document.createElement("ul");
+
+    matches.forEach(match => {
+        const item = document.createElement("li");
+        const songs = match.songIds
+            .map(id => playlist.getSong(id))
+            .filter(Boolean);
+
+        item.textContent =
+            match.title + " — ID(s): " + match.songIds.join(", ");
+
+        if (songs.length) {
+            const playButton = document.createElement("button");
+            playButton.textContent = "Play";
+            playButton.style.marginLeft = "10px";
+            playButton.onclick = () =>
+                playSong(songs[0], "playlist");
+
+            item.appendChild(playButton);
+        }
+
+        list.appendChild(item);
+    });
+
+    results.appendChild(list);
+}
+
+/* =====================================================
+   ARTIST GRAPH OPERATIONS
+===================================================== */
+
+function connectArtists() {
+    const artistA = document.getElementById("artistOne").value.trim();
+    const artistB = document.getElementById("artistTwo").value.trim();
+
+    if (!artistA || !artistB) {
+        showStatus("Enter both artist names.");
+        return;
+    }
+
+    if (!artistGraph.addConnection(artistA, artistB)) {
+        showStatus("Enter two different artist names.");
+        return;
+    }
+
+    document.getElementById("artistOne").value = "";
+    document.getElementById("artistTwo").value = "";
+
+    renderArtistGraph();
+    renderArtistOptions();
+    showStatus("Artist connection added.");
+}
+
+function showRecommendations() {
+    const artist = document.getElementById("recommendArtist").value;
+    const output = document.getElementById("recommendResults");
+
+    if (!artist) {
+        output.textContent = "Choose an artist first.";
+        return;
+    }
+
+    const recommendations = artistGraph.recommendArtists(artist);
+
+    output.innerHTML = "";
+
+    const heading = document.createElement("p");
+    heading.textContent = "Artists exactly two links away from " + artist + ":";
+    output.appendChild(heading);
+
+    if (recommendations.length === 0) {
+        const empty = document.createElement("p");
+        empty.className = "empty";
+        empty.textContent = "No two-hop recommendations found.";
+        output.appendChild(empty);
+        return;
+    }
+
+    const list = document.createElement("ul");
+
+    recommendations.forEach(name => {
+        const item = document.createElement("li");
+        item.textContent = name;
+        list.appendChild(item);
+    });
+
+    output.appendChild(list);
+}
+
+function renderArtistGraph() {
+    const container = document.getElementById("graphView");
+    container.innerHTML = "";
+
+    const connections = artistGraph.getAllConnections();
+
+    if (!connections.length) {
+        container.textContent = "No artists yet.";
+        return;
+    }
+
+    connections.forEach(entry => {
+        const line = document.createElement("p");
+        line.textContent =
+            entry.artist + " → " +
+            (entry.connections.join(", ") || "No connections");
+
+        container.appendChild(line);
+    });
+}
+
+function renderArtistOptions() {
+    const select = document.getElementById("recommendArtist");
+    const previousValue = select.value;
+
+    select.innerHTML = "";
+
+    const artists = [...artistGraph.adjacency.keys()].sort((a, b) =>
+        a.localeCompare(b, undefined, { sensitivity: "base" })
+    );
+
+    artists.forEach(artist => {
+        const option = document.createElement("option");
+        option.value = artist;
+        option.textContent = artist;
+        select.appendChild(option);
+    });
+
+    if (artists.includes(previousValue)) {
+        select.value = previousValue;
+    }
+}
+
+/* =====================================================
+   RENDER UI
+===================================================== */
+
+function updatePlayerDisplay() {
+    document.getElementById("currentTitle").textContent =
+        currentSong ? currentSong.title : "No song selected";
+
+    document.getElementById("currentArtist").textContent =
+        currentSong ? currentSong.artist : "Choose a song from your playlist";
+
+    document.getElementById("playSource").textContent =
+        currentSong ? currentSource.toUpperCase() : "READY TO PLAY";
+
+    document.getElementById("playButton").textContent =
+        isPlaying ? "❚❚ Pause" : "▶ Play";
+}
+
+function renderPlaylist() {
+    const container = document.getElementById("playlistView");
+    container.innerHTML = "";
+
+    const songs = playlist.getAllSongs();
+
+    if (!songs.length) {
+        const empty = document.createElement("li");
+        empty.className = "empty";
+        empty.textContent = "Your playlist is empty. Add a song above.";
+        container.appendChild(empty);
+    }
+
+    songs.forEach(song => {
+        const item = document.createElement("li");
+        item.className = "song-item";
+
+        if (currentSong && currentSong.id === song.id) {
+            item.classList.add("current");
+        }
+
+        const info = document.createElement("div");
+        info.className = "song-info";
+
+        const title = document.createElement("strong");
+        title.textContent = song.title;
+
+        const details = document.createElement("small");
+        details.textContent = song.artist + " · ID: " + song.id;
+
+        info.append(title, details);
+
+        const actions = document.createElement("div");
+        actions.className = "song-actions";
+
+        const play = document.createElement("button");
+        play.textContent = "Play";
+        play.onclick = () => playSong(song, "playlist");
+
+        const queue = document.createElement("button");
+        queue.textContent = "+ Queue";
+        queue.className = "secondary";
+        queue.onclick = () => {
+            upNext.enqueue(song);
+            renderAll();
+            showStatus(song.title + " added to Up Next.");
+        };
+
+        const remove = document.createElement("button");
+        remove.textContent = "Remove";
+        remove.className = "danger";
+        remove.onclick = () => removeSong(song.id);
+
+        actions.append(play, queue, remove);
+        item.append(info, actions);
+        container.appendChild(item);
+    });
+}
+
+function renderQueue() {
+    const container = document.getElementById("queueView");
+    container.innerHTML = "";
+
+    const songs = upNext.getAll();
+
+    if (!songs.length) {
+        const empty = document.createElement("li");
+        empty.className = "empty";
+        empty.textContent = "Queue is empty.";
+        container.appendChild(empty);
+    }
+
+    songs.forEach((song, index) => {
+        const item = document.createElement("li");
+        item.className = "simple-item";
+
+        const text = document.createElement("span");
+        text.textContent = (index + 1) + ". " + song.title + " — " + song.artist;
+
+        const remove = document.createElement("button");
+        remove.textContent = "×";
+        remove.className = "danger";
+        remove.onclick = () => removeFromQueue(index);
+
+        item.append(text, remove);
+        container.appendChild(item);
+    });
+
+    const select = document.getElementById("queueSongId");
+    const oldValue = select.value;
+    select.innerHTML = "";
+
+    playlist.getAllSongs().forEach(song => {
+        const option = document.createElement("option");
+        option.value = song.id;
+        option.textContent = song.id + " — " + song.title;
+        select.appendChild(option);
+    });
+
+    if (playlist.getSong(oldValue)) select.value = oldValue;
+}
+
+function renderHistory() {
+    const container = document.getElementById("historyView");
+    container.innerHTML = "";
+
+    const songs = history.getAll();
+
+    if (!songs.length) {
+        const empty = document.createElement("li");
+        empty.className = "empty";
+        empty.textContent = "No playback history yet.";
+        container.appendChild(empty);
+    }
+
+    songs.forEach((song, index) => {
+        const item = document.createElement("li");
+        item.className = "simple-item";
+
+        const text = document.createElement("span");
+        text.textContent = (index + 1) + ". " + song.title + " — " + song.artist;
+
+        item.appendChild(text);
+        container.appendChild(item);
+    });
+}
+
+function renderAll() {
+    document.getElementById("playlistCount").textContent = playlist.size;
+    document.getElementById("queueCount").textContent = upNext.items.length;
+    document.getElementById("historyCount").textContent = history.size;
+
+    renderPlaylist();
+    renderQueue();
+    renderHistory();
+    renderArtistGraph();
+    renderArtistOptions();
+}
+
+/* =====================================================
+   AUDIO EVENTS
+===================================================== */
+
+const audioPlayer = document.getElementById("audioPlayer");
+
+audioPlayer.addEventListener("play", () => {
+    isPlaying = true;
+    updatePlayerDisplay();
+});
+
+audioPlayer.addEventListener("pause", () => {
+    isPlaying = false;
+    updatePlayerDisplay();
+});
+
+audioPlayer.addEventListener("timeupdate", () => {
+    const audio = document.getElementById("audioPlayer");
+
+    if (audio.duration && Number.isFinite(audio.duration)) {
+        const percent = (audio.currentTime / audio.duration) * 100;
+        document.getElementById("progressBar").style.width = percent + "%";
+    }
+});
+
+audioPlayer.addEventListener("ended", () => {
+    isPlaying = false;
+    updatePlayerDisplay();
+
+    // Automatically advance after an audio file ends.
+    playNext();
+});
+
+audioPlayer.addEventListener("error", () => {
+    if (currentSong && currentSong.audioUrl) {
+        showStatus("Audio could not load. Check the URL or file path.");
+    }
+});
+
+/* =====================================================
+   RESET DEMO DATA
+===================================================== */
+
+function resetDemo() {
+    stopAudio();
+
+    playlist.head = null;
+    playlist.tail = null;
+    playlist.current = null;
+    playlist.songMap.clear();
+    playlist.size = 0;
+    playlist.repeat = false;
+
+    upNext.clear();
+    history.items = [];
+
+    songBST.root = null;
+    artistGraph.adjacency.clear();
+
+    currentSong = null;
+    currentSource = "playlist";
+    isPlaying = false;
+
+    document.getElementById("repeatButton").textContent = "Repeat: OFF";
+    document.getElementById("repeatButton").classList.remove("active");
+
+    const demoSongs = [
+        new Song("S1", "Blinding Lights", "The Weeknd"),
+        new Song("S2", "Perfect", "Ed Sheeran"),
+        new Song("S3", "Heat Waves", "Glass Animals"),
+        new Song("S4", "Hello", "Adele"),
+        new Song("S5", "Happier", "Ed Sheeran"),
+        new Song("S6", "Believer", "Imagine Dragons")
+    ];
+
+    demoSongs.forEach(song => addSong(song));
+
+    // Sample undirected artist network.
+    artistGraph.addConnection("The Weeknd", "Dua Lipa");
+    artistGraph.addConnection("Dua Lipa", "Adele");
+    artistGraph.addConnection("Adele", "Ed Sheeran");
+    artistGraph.addConnection("Ed Sheeran", "Taylor Swift");
+    artistGraph.addConnection("Taylor Swift", "Imagine Dragons");
+    artistGraph.addConnection("Imagine Dragons", "Coldplay");
+    artistGraph.addConnection("Coldplay", "Glass Animals");
+
+    renderAll();
+    updatePlayerDisplay();
+    showStatus("Demo reset. Six sample songs are ready.");
+}
+
+/* =====================================================
+   INITIALIZE
+===================================================== */
+
+resetDemo();
+</script>
+
+</body>
+</html>
